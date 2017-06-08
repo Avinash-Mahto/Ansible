@@ -21,59 +21,59 @@
           yum: name=* state=latest update_cache=yes
         - name: "Install the openstack client"
           yum: name=python-openstackclient state=present
-    - name: "Install the openstack-selinux package"
-    yum: name=openstack-selinux state=present
+        - name: "Install the openstack-selinux package"
+          yum: name=openstack-selinux state=present
 
-    - name: "Install mariadb"
-    yum: name={{ item }} state=present
-    with_items:
-      - mariadb
-      - mariadb-server
-      - python2-PyMySQL
-    tags: mariadb
+        - name: "Install mariadb"
+          yum: name={{ item }} state=present
+          with_items:
+          - mariadb
+          - mariadb-server
+          - python2-PyMySQL
+          tags: mariadb
  
-     - name: "create and edit the /etc/my.cnf.d/openstack.cnf"
-       copy:
-       src: /root/openstack/openstack.cnf 
-       dest: /etc/my.cnf.d/openstack.cnf
+        - name: "create and edit the /etc/my.cnf.d/openstack.cnf"
+          copy:
+           src: /root/openstack/openstack.cnf 
+           dest: /etc/my.cnf.d/openstack.cnf
 
-    - name: "Start the database service and configure it to start"
-    service: "name=mariadb state=started enabled=yes"
-    tags: mariadb1
+        - name: "Start the database service and configure it to start"
+          service: "name=mariadb state=started enabled=yes"
+          tags: mariadb1
 
-    - name: " Start installation of expect"
-    yum: name=expect state=present
+        - name: " Start installation of expect"
+          yum: name=expect state=present
 
-    - name: "copy mysql script to destination server"
-    copy:
-     src: /root/openstack/mariadb
-     dest: /root/
-     mode: 0755 
+        - name: "copy mysql script to destination server"
+          copy:
+            src: /root/openstack/mariadb
+            dest: /root/
+            mode: 0755 
      
-     - name: "running the mysql_secure_installation script"
-        command: >
-         expect /root/mariadb
+        - name: "running the mysql_secure_installation script"
+          command: >
+          expect /root/mariadb
 
-    - name: " Install mongo db"
-    yum: name={{ item }} state=present
-    with_items:
-      - mongodb-server
-      - mongodb
-    - debug: var=item.stdout
-    with_items: echo.results
+        - name: " Install mongo db"
+          yum: name={{ item }} state=present
+          with_items:
+          - mongodb-server
+          - mongodb
+          - debug: var=item.stdout
+          with_items: echo.results
 
 
-    - name:  "/etc/mongod.conf file" 
-    lineinfile:
-      dest: "/etc/mongod.conf"
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
-          state:  "{{ present }}"
-    with_items:
-      - { regexp: "^bind_ip = 127.0.0.1", line: "bind_ip = 10.0.0.X" }
-      - { regexp: "^#smallfiles = true", line: "smallfiles = true" }
+        - name:  "/etc/mongod.conf file" 
+          lineinfile:
+            dest: "/etc/mongod.conf"
+            regexp: "{{ item.regexp }}"
+            line: "{{ item.line }}"
+            state:  "{{ present }}"
+           with_items:
+           - { regexp: "^bind_ip = 127.0.0.1", line: "bind_ip = 10.0.0.X" }
+           - { regexp: "^#smallfiles = true", line: "smallfiles = true" }
 
-      - name: "start mongodb service"
+        - name: "start mongodb service"
         service: name=mongod state=started enabled=yes
 
     - name: "Install rabbitmq package"
@@ -86,8 +86,8 @@
         command: >
          rabbitmqctl add_user openstack redhat
       - name: "Permit configuration, write, and read access for the openstack user"
-    #    command:
-    #     rabbitmqctl set_permissions openstack ".*" ".*" ".*"
+        command:
+         rabbitmqctl set_permissions openstack ".*" ".*" ".*"
 
       - name: "Install memcached packge"
         yum: name={{ item }} state=present
@@ -120,8 +120,8 @@
           db: keystone 
           state: present
 
-    #  - shell: 
-    #      openssl rand -hex 10 >> /root/pass.txt
+      - shell: 
+        openssl rand -hex 10 >> /root/pass.txt
 
       - name: "Install keystone, httpd & mod_wsgi package"
         yum: name={{ item }} state=present
@@ -137,7 +137,7 @@
           line: "{{ item.line }}"
         with_items:
           - { regexp: "^#admin_token = d5c53221cbaea647d5a0u", line: "admin_token = d5c53221cbaea647d5a0" }
-          - { regexp: "^#connection = mysql://keystone:openstack@openstack/keystone", line: "connection =    mysql://keystone:openstack@10.0.0.X/keystone" }
+          - { regexp: "^#connection = mysql://keystone:openstack@openstack/keystone", line: "connection =        mysql://keystone:openstack@10.0.0.X/keystone" }
           - { regexp: "^#provider = fernet", line: "provider = fernet" }
 
 
@@ -174,3 +174,31 @@
       - name: "Create keystone endpoints"
         shell:  >
           `openstack service create --name keystone --description "OpenStack Identity" identity`
+          
+          ## Script to populate mariadb database given below, that is used in above code with the name by maridb script ##
+          spawn mysql_secure_installation
+
+    expect "Enter current password for root (enter for none)"
+    send "\n"
+    expect {"Set root password? [Y/n]"}
+    send "Y\n"
+
+    expect "New password:"
+    send "redhat\n"
+
+    expect "Re-enter new password:"
+    send "redhat\n"
+
+    expect {"Remove anonymous users? [Y/n]"}
+    send "n\n"
+
+    expect {"Disallow root login remotely? [Y/n]"}
+    send "n\n"
+
+    expect {"Remove test database and access to it? [Y/n]"}
+    send "n\n"
+
+    expect {"Reload privilege tables now? [Y/n]"}
+    send "Y\n"
+    interact
+          
