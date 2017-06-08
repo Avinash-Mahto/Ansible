@@ -188,7 +188,7 @@
     send "redhat\n"
 
     expect "Re-enter new password:"
-    send "redhat\n"
+    send "XXXX\n"
 
     expect {"Remove anonymous users? [Y/n]"}
     send "n\n"
