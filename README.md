@@ -176,7 +176,8 @@
           `openstack service create --name keystone --description "OpenStack Identity" identity`
           
           ## Script to populate mariadb database given below, that is used in above code with the name by maridb script ##
-          spawn mysql_secure_installation
+          
+    spawn mysql_secure_installation
 
     expect "Enter current password for root (enter for none)"
     send "\n"
