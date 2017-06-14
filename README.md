@@ -175,7 +175,7 @@
         shell:  >
           `openstack service create --name keystone --description "OpenStack Identity" identity`
           
-   # Script to populate mariadb database given below, that is used in above code with the name by maridb script #
+   ##### Script to populate mariadb database given below, that is used in above code with the name by maridb script 
           
     spawn mysql_secure_installation
 
